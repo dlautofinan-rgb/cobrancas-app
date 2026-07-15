@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Cobranças</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 12px;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        h1 { color: #d9534f; margin: 0 0 10px 0; font-size: 22px; display: flex; align-items: center; gap: 8px; }
+        
+        .busca-box {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 15px;
+            box-sizing: border-box;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 14px;
+        }
+        th { background-color: #f8f9fa; color: #495057; font-weight: 600; }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .pendente { background-color: #fff3cd; color: #856404; }
+        .atrasado { background-color: #f8d7da; color: #721c24; }
+
+        .btn-whats {
+            background-color: #25D366;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+        }
+        .btn-whats:hover { background-color: #1ebd58; }
+        
+        .status-conexao {
+            padding: 10px;
+            background-color: #e2e8f0;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>💸 Gestão de Cobranças</h1>
+    <div id="status" class="status-conexao">🔄 Sincronizando com o Dropbox...</div>
+
+    <input type="text" id="busca" class="busca-box" placeholder="Filtrar por cliente, valor ou status..." onkeyup="filtrarTabela()">
+
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Valor Devido</th>
+                    <th>Vencimento</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-corpo">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // ⚠️ SUBSTITUA PELO SEU LINK DO DROPBOX (Terminando em raw=1)
+    const LINK_DIRETO_DROPBOX = "https://www.dropbox.com/scl/fi/mwzf9fhrr7gipsuojut28/cobrancas_painel.json?rlkey=123&raw=1"; 
+
+    async function carregarDadosDoDropbox() {
+        const statusDiv = document.getElementById('status');
+        try {
+            const resposta = await fetch(LINK_DIRETO_DROPBOX);
+
+            if (!resposta.ok) throw new Error("Não foi possível carregar a lista.");
+
+            const devedores = await resposta.json();
+            
+            statusDiv.innerHTML = "🟢 Sincronizado com o Dropbox!";
+            statusDiv.style.backgroundColor = "#d4edda";
+            statusDiv.style.color = "#155724";
+
+            renderizarTabela(devedores);
+
+        } catch (erro) {
+            console.error(erro);
+            statusDiv.innerHTML = "🔴 Erro: " + erro.message;
+            statusDiv.style.backgroundColor = "#f8d7da";
+            statusDiv.style.color = "#721c24";
+        }
+    }
+
+    function renderizarTabela(dados) {
+        const tabela = document.getElementById('tabela-corpo');
+        tabela.innerHTML = "";
+
+        dados.forEach(cliente => {
+            const statusClass = cliente.diasAtraso > 0 ? 'atrasado' : 'pendente';
+            const statusTexto = cliente.diasAtraso > 0 ? `Atrasado (${cliente.diasAtraso} dias)` : 'A vencer';
+            
+            // Cria a mensagem para o WhatsApp
+            const mensagemWhats = encodeURIComponent(`Olá ${cliente.nome}, identificamos uma pendência no valor de R$ ${cliente.valor} vencida em ${cliente.vencimento}. Como podemos ajudar no acerto?`);
+
+            tabela.innerHTML += `
+                <tr>
+                    <td><strong>${cliente.nome}</strong></td>
+                    <td>R$ ${cliente.valor}</td>
+                    <td>${cliente.vencimento}</td>
+                    <td><span class="status-badge ${statusClass}">${statusTexto}</span></td>
+                    <td>
+                        <a href="https://wa.me/55${cliente.contato.replace(/\D/g, '')}?text=${mensagemWhats}" target="_blank" class="btn-whats">
+                            💬 Cobrar
+                        </a>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function filtrarTabela() {
+        let input = document.getElementById('busca').value.toLowerCase();
+        let linhas = document.getElementById('tabela-corpo').getElementsByTagName('tr');
+
+        for (let i = 0; i < linhas.length; i++) {
+            let textoLinha = lines[i].innerText.toLowerCase();
+            linhas[i].style.display = textoLinha.includes(input) ? "" : "none";
+        }
+    }
+
+    carregarDadosDoDropbox();
+</script>
+
+</body>
+</html>
