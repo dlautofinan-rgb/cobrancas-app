@@ -110,20 +110,37 @@
     </div>
 </div>
 
-<script src="https://www.dropbox.com/scl/fi/zqtsdpf98acxcig89234c/script.js?rlkey=j96xh1y38w15u29augc8sax0t&raw=1"></script>
-
 <script>
+    // Link direto do seu script.js no Dropbox
+    const LINK_DROPBOX = "https://www.dropbox.com/scl/fi/zqtsdpf98acxcig89234c/script.js?rlkey=j96xh1y38w15u29augc8sax0t&raw=1";
     const statusDiv = document.getElementById('status');
 
-    function inicializarPainel() {
+    async function carregarDadosDoDropbox() {
         try {
-            // Verifica se a variável de devedores existe dentro do seu script.js do Dropbox
-            // NOTA: Se o seu script.js usar um nome de variável diferente de "cobrancas" ou "devedores", 
-            // basta me dizer para ajustarmos aqui!
-            const dados = window.cobrancas || window.devedores || window.dados;
+            // Baixa o arquivo diretamente como texto
+            const resposta = await fetch(LINK_DROPBOX);
+            if (!resposta.ok) throw new Error("Não foi possível conectar ao Dropbox.");
+            
+            let textoBruto = await resposta.text();
+            textoBruto = textoBruto.trim();
+
+            let dados = null;
+
+            // Tenta ler o conteúdo diretamente se ele for um JSON puro mascarado de .js
+            if (textoBruto.startsWith('[') || textoBruto.startsWith('{')) {
+                dados = JSON.parse(textoBruto);
+            } else {
+                // Se ele tiver uma variável antes (ex: "var dados = [...]"), tenta extrair só o JSON de dentro dele
+                const inicioJson = textoBruto.indexOf('[');
+                const fimJson = textoBruto.lastIndexOf(']');
+                if (inicioJson !== -1 && fimJson !== -1) {
+                    const apenasJson = textoBruto.substring(inicioJson, fimJson + 1);
+                    dados = JSON.parse(apenasJson);
+                }
+            }
 
             if (!dados || dados.length === 0) {
-                throw new Error("Nenhum dado encontrado no arquivo do Dropbox.");
+                throw new Error("Não foi possível extrair a lista de devedores do arquivo.");
             }
 
             statusDiv.innerHTML = "🟢 Sincronizado com o Dropbox!";
@@ -134,7 +151,7 @@
 
         } catch (erro) {
             console.error(erro);
-            statusDiv.innerHTML = "🔴 Erro: " + erro.message + " (Verifique se as variáveis no script.js estão corretas)";
+            statusDiv.innerHTML = "🔴 Erro: " + erro.message;
             statusDiv.style.backgroundColor = "#f8d7da";
             statusDiv.style.color = "#721c24";
         }
@@ -145,12 +162,12 @@
         tabela.innerHTML = "";
 
         dados.forEach(cliente => {
-            // Garante compatibilidade caso as propriedades venham com nomes levemente diferentes do Java
-            const nome = cliente.nome || cliente.cliente || "Sem Nome";
-            const valor = cliente.valor || cliente.valorDevido || "0,00";
-            const vencimento = cliente.vencimento || cliente.data || "-";
-            const diasAtraso = cliente.diasAtraso !== undefined ? cliente.diasAtraso : 0;
-            const contato = cliente.contato || cliente.telefone || "";
+            // Mapeamento inteligente caso os nomes das propriedades no Java sejam diferentes
+            const nome = cliente.nome || cliente.cliente || cliente.Nome || "Sem Nome";
+            const valor = cliente.valor || cliente.valorDevido || cliente.Valor || "0,00";
+            const vencimento = cliente.vencimento || cliente.data || cliente.Vencimento || "-";
+            const diasAtraso = cliente.diasAtraso !== undefined ? cliente.diasAtraso : (cliente.DiasAtraso || 0);
+            const contato = cliente.contato || cliente.telefone || cliente.Celular || "";
 
             const statusClass = diasAtraso > 0 ? 'atrasado' : 'pendente';
             const statusTexto = diasAtraso > 0 ? `Atrasado (${diasAtraso} dias)` : 'A vencer';
@@ -183,9 +200,6 @@
         }
     }
 
-    // Executa assim que o script externo do Dropbox terminar de carregar
-    window.onload = inicializarPainel;
+    // Inicializa a carga
+    carregarDadosDoDropbox();
 </script>
-
-</body>
-</html>
