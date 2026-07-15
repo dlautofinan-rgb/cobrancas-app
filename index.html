@@ -89,7 +89,7 @@
 
 <div class="container">
     <h1>💸 Gestão de Cobranças</h1>
-    <div id="status" class="status-conexao">🔄 Sincronizando com o Dropbox...</div>
+    <div id="status" class="status-conexao">🔄 Carregando dados do Dropbox...</div>
 
     <input type="text" id="busca" class="busca-box" placeholder="Filtrar por cliente, valor ou status..." onkeyup="filtrarTabela()">
 
@@ -110,28 +110,31 @@
     </div>
 </div>
 
+<script src="https://www.dropbox.com/scl/fi/zqtsdpf98acxcig89234c/script.js?rlkey=j96xh1y38w15u29augc8sax0t&raw=1"></script>
+
 <script>
-    // ⚠️ SUBSTITUA PELO SEU LINK DO DROPBOX (Terminando em raw=1)
-    const LINK_DIRETO_DROPBOX = "https://raw.githubusercontent.com/dlautofinan-rgb/cobrancas-app/refs/heads/main/cobrancas_painel.json"; 
+    const statusDiv = document.getElementById('status');
 
-    async function carregarDadosDoDropbox() {
-        const statusDiv = document.getElementById('status');
+    function inicializarPainel() {
         try {
-            const resposta = await fetch(LINK_DIRETO_DROPBOX);
+            // Verifica se a variável de devedores existe dentro do seu script.js do Dropbox
+            // NOTA: Se o seu script.js usar um nome de variável diferente de "cobrancas" ou "devedores", 
+            // basta me dizer para ajustarmos aqui!
+            const dados = window.cobrancas || window.devedores || window.dados;
 
-            if (!resposta.ok) throw new Error("Não foi possível carregar a lista.");
+            if (!dados || dados.length === 0) {
+                throw new Error("Nenhum dado encontrado no arquivo do Dropbox.");
+            }
 
-            const devedores = await resposta.json();
-            
             statusDiv.innerHTML = "🟢 Sincronizado com o Dropbox!";
             statusDiv.style.backgroundColor = "#d4edda";
             statusDiv.style.color = "#155724";
 
-            renderizarTabela(devedores);
+            renderizarTabela(dados);
 
         } catch (erro) {
             console.error(erro);
-            statusDiv.innerHTML = "🔴 Erro: " + erro.message;
+            statusDiv.innerHTML = "🔴 Erro: " + erro.message + " (Verifique se as variáveis no script.js estão corretas)";
             statusDiv.style.backgroundColor = "#f8d7da";
             statusDiv.style.color = "#721c24";
         }
@@ -142,20 +145,26 @@
         tabela.innerHTML = "";
 
         dados.forEach(cliente => {
-            const statusClass = cliente.diasAtraso > 0 ? 'atrasado' : 'pendente';
-            const statusTexto = cliente.diasAtraso > 0 ? `Atrasado (${cliente.diasAtraso} dias)` : 'A vencer';
+            // Garante compatibilidade caso as propriedades venham com nomes levemente diferentes do Java
+            const nome = cliente.nome || cliente.cliente || "Sem Nome";
+            const valor = cliente.valor || cliente.valorDevido || "0,00";
+            const vencimento = cliente.vencimento || cliente.data || "-";
+            const diasAtraso = cliente.diasAtraso !== undefined ? cliente.diasAtraso : 0;
+            const contato = cliente.contato || cliente.telefone || "";
+
+            const statusClass = diasAtraso > 0 ? 'atrasado' : 'pendente';
+            const statusTexto = diasAtraso > 0 ? `Atrasado (${diasAtraso} dias)` : 'A vencer';
             
-            // Cria a mensagem para o WhatsApp
-            const mensagemWhats = encodeURIComponent(`Olá ${cliente.nome}, identificamos uma pendência no valor de R$ ${cliente.valor} vencida em ${cliente.vencimento}. Como podemos ajudar no acerto?`);
+            const mensagemWhats = encodeURIComponent(`Olá ${nome}, identificamos uma pendência no valor de R$ ${valor} vencida em ${vencimento}. Como podemos ajudar no acerto?`);
 
             tabela.innerHTML += `
                 <tr>
-                    <td><strong>${cliente.nome}</strong></td>
-                    <td>R$ ${cliente.valor}</td>
-                    <td>${cliente.vencimento}</td>
+                    <td><strong>${nome}</strong></td>
+                    <td>R$ ${valor}</td>
+                    <td>${vencimento}</td>
                     <td><span class="status-badge ${statusClass}">${statusTexto}</span></td>
                     <td>
-                        <a href="https://wa.me/55${cliente.contato.replace(/\D/g, '')}?text=${mensagemWhats}" target="_blank" class="btn-whats">
+                        <a href="https://wa.me/55${contato.replace(/\D/g, '')}?text=${mensagemWhats}" target="_blank" class="btn-whats">
                             💬 Cobrar
                         </a>
                     </td>
@@ -169,12 +178,13 @@
         let linhas = document.getElementById('tabela-corpo').getElementsByTagName('tr');
 
         for (let i = 0; i < linhas.length; i++) {
-            let textoLinha = lines[i].innerText.toLowerCase();
+            let textoLinha = linhas[i].innerText.toLowerCase();
             linhas[i].style.display = textoLinha.includes(input) ? "" : "none";
         }
     }
 
-    carregarDadosDoDropbox();
+    // Executa assim que o script externo do Dropbox terminar de carregar
+    window.onload = inicializarPainel;
 </script>
 
 </body>
