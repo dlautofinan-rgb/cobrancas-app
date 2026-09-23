@@ -3,188 +3,1259 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Cobranças</title>
+    <title>DL AUTO PEÇAS - Extrato de Crediário & Gestão de Clientes</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Inter e Space Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        receipt: ['"Space Mono"', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f6f9;
-            margin: 0;
-            padding: 12px;
-            color: #333;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
-        h1 { color: #d9534f; margin: 0 0 10px 0; font-size: 22px; display: flex; align-items: center; gap: 8px; }
-        
-        .busca-box {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border: 1px solid #ced4da;
-            border-radius: 8px;
-            font-size: 15px;
-            box-sizing: border-box;
+        .receipt-edge-top {
+            background-image: radial-gradient(circle at 10px -5px, transparent 12px, #ffffff 13px);
+            background-size: 20px 20px;
+            background-repeat: repeat-x;
         }
 
-        .table-responsive {
-            overflow-x: auto;
+        .receipt-edge-bottom {
+            background-image: radial-gradient(circle at 10px 25px, transparent 12px, #ffffff 13px);
+            background-size: 20px 20px;
+            background-repeat: repeat-x;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 5px;
+        .receipt-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
         }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #dee2e6;
-            font-size: 14px;
-        }
-        th { background-color: #f8f9fa; color: #495057; font-weight: 600; }
-        
-        .status-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: bold;
-            display: inline-block;
-        }
-        .pendente { background-color: #fff3cd; color: #856404; }
-        .atrasado { background-color: #f8d7da; color: #721c24; }
 
-        .btn-whats {
-            background-color: #25D366;
-            color: white;
-            border: none;
-            padding: 6px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 12px;
-        }
-        .btn-whats:hover { background-color: #1ebd58; }
-        
-        .status-conexao {
-            padding: 10px;
-            background-color: #e2e8f0;
-            border-radius: 6px;
-            font-size: 12px;
-            margin-bottom: 15px;
-            font-weight: bold;
+        @media print {
+            body {
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-only-wrapper {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+            }
+            .receipt-paper {
+                box-shadow: none !important;
+                border: 1px solid #000 !important;
+                max-width: 100% !important;
+                width: 80mm !important;
+                margin: 0 auto !important;
+                padding: 12px !important;
+                color: #000 !important;
+            }
         }
     </style>
 </head>
-<body>
+<body class="bg-slate-100 min-h-screen font-sans text-slate-800 antialiased pb-12">
 
-<div class="container">
-    <h1>💸 Gestão de Cobranças</h1>
-    <div id="status" class="status-conexao">🔄 Conectando com o Dropbox...</div>
-
-    <input type="text" id="busca" class="busca-box" placeholder="Filtrar por cliente, valor ou status..." onkeyup="filtrarTabela()">
-
-    <div class="table-responsive">
-        <table>
-            <thead>
-                <tr>
-                    <th>Cliente</th>
-                    <th>Valor Devido</th>
-                    <th>Vencimento</th>
-                    <th>Status</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody id="tabela-corpo">
-                </tbody>
-        </table>
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 ease-in-out bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-3 pointer-events-none">
+        <i id="toast-icon" class="fas fa-check-circle text-emerald-400 text-lg"></i>
+        <span id="toast-message" class="text-sm font-medium">Operação realizada!</span>
     </div>
-</div>
 
-<script src="https://www.dropbox.com/scl/fi/zqtsdpf98acxcig89234c/script.js?rlkey=j96xh1y38w15u29augc8sax0t&raw=1"></script>
+    <!-- Header Principal -->
+    <header class="bg-slate-900 text-white py-4 px-4 sm:px-8 shadow-md no-print mb-6">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-slate-900 font-bold text-xl shadow-lg">
+                    <i class="fas fa-car-wrench"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight flex items-center gap-2">
+                        DL AUTO PEÇAS
+                        <span id="firebaseStatusBadge" class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 font-normal px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <i class="fas fa-spinner fa-spin text-[8px]"></i> Conectando Firebase...
+                        </span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Extrato de Crediário & Sincronização em Nuvem em Tempo Real</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="abrirModalClientes()" class="flex items-center space-x-2 text-xs bg-slate-800 hover:bg-slate-700 py-2 px-3.5 rounded-lg border border-slate-700 text-amber-400 transition font-semibold">
+                    <i class="fas fa-users"></i>
+                    <span>Clientes Salvos (<span id="countClientesBadge">0</span>)</span>
+                </button>
+                <button onclick="novoCrediario()" class="flex items-center space-x-2 text-xs bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-2 px-3.5 rounded-lg transition shadow-sm">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Novo Crediário / Limpar Peças</span>
+                </button>
+            </div>
+        </div>
+    </header>
 
-<script>
-    const statusDiv = document.getElementById('status');
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- PAINEL ESQUERDO: Formulários e Clientes (Colunas 1 a 7) -->
+            <div class="lg:col-span-7 space-y-6 no-print">
+                
+                <!-- Card 1: Dados Fixos da Loja -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-6">
+                    <div class="flex items-center justify-between font-semibold text-slate-900 text-lg mb-3">
+                        <span class="flex items-center gap-2.5">
+                            <i class="fas fa-store text-amber-600"></i>
+                            Dados da Empresa (DL AUTO PEÇAS)
+                        </span>
+                        <span class="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full flex items-center gap-1">
+                            <i class="fas fa-lock text-[10px]"></i> Dados Fixos
+                        </span>
+                    </div>
+                    
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm space-y-2 text-slate-700">
+                        <div class="flex flex-col sm:flex-row sm:justify-between border-b border-slate-200 pb-1.5">
+                            <span class="font-bold text-slate-900">Razão / Nome:</span>
+                            <span>DL AUTO PEÇAS</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:justify-between border-b border-slate-200 pb-1.5">
+                            <span class="font-bold text-slate-900">CNPJ:</span>
+                            <span class="font-mono">18.615.637/0001-58</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:justify-between border-b border-slate-200 pb-1.5">
+                            <span class="font-bold text-slate-900">Endereço:</span>
+                            <span>RUA HERACLIO MENDES DE CAMARGO, 3300 - CEP: 84168-260</span>
+                        </div>
+                    </div>
 
-    function inicializarPainel() {
-        try {
-            // Essa linha varre o arquivo script.js procurando as variáveis comuns que o Java pode ter gerado
-            const dados = window.cobrancas || window.devedores || window.dados || window.dados_clientes || window.contas;
+                    <!-- Dados Fixos do PIX com Ação de Quitação Automática -->
+                    <div class="mt-4 bg-emerald-50 p-4 rounded-xl border border-emerald-200 space-y-2 text-xs text-slate-800">
+                        <div class="flex items-center justify-between font-bold text-emerald-900 uppercase tracking-wider mb-1">
+                            <span class="flex items-center gap-1.5"><i class="fas fa-qrcode text-emerald-600"></i> Chave PIX Fixo</span>
+                            <button onclick="copiarChavePixEQuitar()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1.5">
+                                <i class="fas fa-copy"></i> Copiar PIX + Gerar Recibo
+                            </button>
+                        </div>
+                        <div><span class="font-semibold text-slate-600">Chave PIX (CNPJ):</span> <span class="font-mono font-bold bg-white px-2 py-0.5 rounded border border-emerald-200 text-emerald-900">18.615.637/0001-58</span></div>
+                        <div><span class="font-semibold text-slate-600">Titular / Beneficiário:</span> <span class="font-semibold text-slate-900">DANIELLE APARECIDA BATISTA LOURENÇO</span></div>
+                    </div>
+                </div>
 
-            if (!dados || dados.length === 0) {
-                // Se o script.js carregou mas não achou nenhuma variável com esses nomes, mostra este aviso
-                throw new Error("O arquivo carregou, mas a variável de dados do Java tem um nome diferente.");
+                <!-- Card 2: Seleção e Cadastro Automático do Cliente -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-4 border-b border-slate-100">
+                        <h3 class="font-semibold text-slate-900 text-lg flex items-center gap-2.5">
+                            <i class="fas fa-user-tag text-amber-600"></i>
+                            Dados do Cliente
+                        </h3>
+                        <div class="inline-flex rounded-xl p-1 bg-slate-100 border border-slate-200 text-xs font-semibold">
+                            <button id="btnModoCrediario" onclick="setModoDocumento('CREDIARIO')" class="px-3 py-1.5 rounded-lg transition bg-amber-500 text-slate-900 shadow">
+                                <i class="fas fa-clock mr-1"></i> Crediário / Em Aberto
+                            </button>
+                            <button id="btnModoComprovante" onclick="setModoDocumento('COMPROVANTE')" class="px-3 py-1.5 rounded-lg transition text-slate-600 hover:text-slate-900">
+                                <i class="fas fa-check-circle mr-1"></i> Comprovante de Pagamento
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Seletor Rápido de Clientes Sincronizados com Firebase -->
+                    <div class="mb-4 bg-amber-50/60 p-3.5 rounded-xl border border-amber-200/80">
+                        <label class="block text-xs font-bold text-amber-900 uppercase tracking-wider mb-1 flex items-center justify-between">
+                            <span><i class="fas fa-cloud-download-alt mr-1"></i> Selecionar Cliente Salvo no Firebase</span>
+                            <span class="text-[10px] text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded-full"><i class="fas fa-sync-alt fa-spin mr-1"></i> Tempo Real</span>
+                        </label>
+                        <select id="selectClienteSalvo" onchange="selecionarClienteCadastrado(this.value)" class="w-full px-3 py-2 text-sm rounded-lg border border-amber-300 focus:ring-2 focus:ring-amber-500 bg-white outline-none font-medium text-slate-800">
+                            <option value="">-- Carregando base de clientes do Firebase... --</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                Nome do Cliente * <span class="text-[10px] text-emerald-600 font-normal">(Auto-Salva no Cloud)</span>
+                            </label>
+                            <input type="text" id="clienteNome" oninput="aoDigitarCliente()" placeholder="Nome completo do cliente" class="w-full px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">WhatsApp / Celular *</label>
+                            <input type="text" id="clienteTelefone" oninput="aoDigitarCliente()" placeholder="(00) 00000-0000" class="w-full px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 outline-none transition">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">CPF / CNPJ (Opcional)</label>
+                            <input type="text" id="clienteDocumento" oninput="aoDigitarCliente()" placeholder="000.000.000-00" class="w-full px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Endereço do Cliente (Opcional)</label>
+                            <input type="text" id="clienteEndereco" oninput="aoDigitarCliente()" placeholder="Rua, número, bairro..." class="w-full px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 outline-none transition">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Data Emissão</label>
+                            <input type="date" id="dataEmissao" onchange="atualizarCupom()" class="w-full px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Data Pagamento / Venc.</label>
+                            <input type="date" id="dataVencimento" onchange="atualizarCupom()" class="w-full px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 outline-none transition">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Adição de Peças / Itens com Controle de Pagamento -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-slate-900 text-lg flex items-center gap-2.5">
+                            <i class="fas fa-wrench text-amber-600"></i>
+                            Auto Peças & Lançamentos
+                        </h3>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="marcarTodosItens(true)" class="text-[11px] bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-md border border-emerald-200 font-semibold transition">
+                                <i class="fas fa-check-double mr-1"></i> Quitar Todos
+                            </button>
+                            <button type="button" onclick="marcarTodosItens(false)" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-md border border-slate-200 font-semibold transition">
+                                <i class="fas fa-times mr-1"></i> Abrir Todos
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Formulário de Entrada de Item -->
+                    <form id="formAdicionarItem" onsubmit="adicionarItem(event)" class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-5 space-y-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                            <div class="sm:col-span-3">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Data Compra</label>
+                                <input type="date" id="inputItemData" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 outline-none">
+                            </div>
+                            <div class="sm:col-span-4">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Descrição da Peça</label>
+                                <input type="text" id="inputItemDesc" placeholder="Ex: Jogo de Velas Bosch" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 outline-none">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Qtd.</label>
+                                <input type="number" id="inputItemQtd" min="1" value="1" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 outline-none">
+                            </div>
+                            <div class="sm:col-span-3">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Valor Unit. (R$)</label>
+                                <input type="number" id="inputItemValor" step="0.01" min="0.01" placeholder="0.00" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 outline-none">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-medium text-sm rounded-lg shadow-sm transition flex items-center justify-center gap-2">
+                            <i class="fas fa-plus-circle"></i> Adicionar Peça ao Extrato
+                        </button>
+                    </form>
+
+                    <!-- Tabela de Peças Adicionadas -->
+                    <div class="overflow-x-auto rounded-xl border border-slate-200 mb-4">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-100 text-slate-600 text-xs font-semibold uppercase tracking-wider">
+                                <tr>
+                                    <th class="p-3 text-center">Status</th>
+                                    <th class="p-3">Data</th>
+                                    <th class="p-3">Peça / Produto</th>
+                                    <th class="p-3 text-center">Qtd</th>
+                                    <th class="p-3 text-right">Total</th>
+                                    <th class="p-3 text-center">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaItensCorpo" class="divide-y divide-slate-200">
+                                <!-- Preenchido dinamicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Ajustes de Desconto / Acréscimo -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Desconto Geral (R$)</label>
+                            <input type="number" id="valorDesconto" step="0.01" min="0" value="0" oninput="atualizarCupom()" placeholder="0.00" class="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Acréscimo / Juros (R$)</label>
+                            <input type="number" id="valorAcrescimo" step="0.01" min="0" value="0" oninput="atualizarCupom()" placeholder="0.00" class="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Resumo dos Totais -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-900 text-white p-4 rounded-xl">
+                        <div>
+                            <span class="text-xs text-slate-400 block uppercase tracking-wider">Total do Lançamento</span>
+                            <span id="formValorTotal" class="text-2xl font-bold text-amber-400">R$ 0,00</span>
+                        </div>
+                        <div class="sm:text-right border-t sm:border-t-0 sm:border-l border-slate-700 pt-2 sm:pt-0 sm:pl-4">
+                            <span class="text-xs text-emerald-400 block uppercase tracking-wider">Valor Pago / Quitado</span>
+                            <span id="formValorPagoTotal" class="text-2xl font-bold text-emerald-400">R$ 0,00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Observações -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-6">
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2 flex items-center gap-2">
+                        <i class="fas fa-comment-dots text-amber-600"></i> Observações / Recado no Comprovante
+                    </label>
+                    <textarea id="mensagemAgradecimento" rows="2" oninput="atualizarCupom()" class="w-full p-3 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-500 outline-none transition" placeholder="Ex: Pagamento recebido com sucesso via PIX. Obrigado pela preferência!"></textarea>
+                </div>
+
+            </div>
+
+            <!-- PAINEL DIREITO: Visualização do Cupom e Envio (Colunas 8 a 12) -->
+            <div class="lg:col-span-5 space-y-6">
+                
+                <!-- Botões de Ação Dinâmicos -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 no-print space-y-3">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                        <span>Ações Rápidas de Envio</span>
+                        <span id="badgeModoAtual" class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">CREDIARIO</span>
+                    </h3>
+                    
+                    <button id="btnEnviarWhatsAppMain" onclick="enviarWhatsApp()" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-md transition flex items-center justify-center gap-2 text-base">
+                        <i class="fab fa-whatsapp text-xl"></i> <span id="lblBtnWhats">Enviar Extrato no WhatsApp</span>
+                    </button>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="copiarTextoWhatsApp()" class="py-2.5 px-3 bg-slate-800 hover:bg-slate-900 text-white text-xs font-medium rounded-lg transition flex items-center justify-center gap-1.5">
+                            <i class="fas fa-copy"></i> Copiar P/ WhatsApp
+                        </button>
+                        <button onclick="imprimirCupom()" class="py-2.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg transition flex items-center justify-center gap-1.5">
+                            <i class="fas fa-print"></i> Imprimir / PDF
+                        </button>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100 flex gap-2">
+                        <button onclick="copiarChavePixEQuitar()" class="w-full py-2 px-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-bold rounded-lg transition flex items-center justify-center gap-1.5">
+                            <i class="fas fa-qrcode"></i> Copiar PIX & Dar Baixa
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PRÉ-VISUALIZAÇÃO DO CUPOM / COMPROVANTE DL AUTO PEÇAS -->
+                <div class="print-only-wrapper">
+                    <!-- Topo denteado -->
+                    <div class="receipt-edge-top h-4 no-print"></div>
+                    
+                    <!-- Papel do Cupom -->
+                    <div id="cupomPapel" class="receipt-paper bg-white p-6 sm:p-7 text-slate-800 font-receipt receipt-shadow transition-all relative">
+                        
+                        <!-- Marca d'água Dinâmica -->
+                        <div id="watermarkStatus" class="absolute top-12 right-6 border-2 border-red-500/30 text-red-500/40 font-bold px-3 py-1 rounded text-xs uppercase tracking-widest rotate-12 select-none pointer-events-none">
+                            EM ABERTO
+                        </div>
+
+                        <!-- Cabeçalho da Empresa DL AUTO PEÇAS -->
+                        <div class="text-center pb-4 border-b-2 border-dashed border-slate-300">
+                            <h2 class="font-bold text-xl text-slate-900 uppercase tracking-tight leading-tight">DL AUTO PEÇAS</h2>
+                            <p class="text-[11px] text-slate-600 mt-1 font-semibold">CNPJ: 18.615.637/0001-58</p>
+                            <p class="text-[11px] text-slate-600">RUA HERACLIO MENDES DE CAMARGO, 3300</p>
+                            <p class="text-[11px] text-slate-600">CEP: 84168-260</p>
+                        </div>
+
+                        <!-- Título do Extrato/Comprovante -->
+                        <div class="text-center py-3 my-1 border-b border-slate-200">
+                            <span id="viewTituloDoc" class="font-bold text-sm tracking-widest text-slate-800 uppercase block">EXTRATO DE CREDIÁRIO</span>
+                            <div class="flex justify-between text-[11px] text-slate-500 mt-1 px-1">
+                                <span id="viewDataEmissao">Emissão: --/--/----</span>
+                                <span id="viewDataVencimento">Venc: --/--/----</span>
+                            </div>
+                        </div>
+
+                        <!-- Dados do Cliente no Extrato -->
+                        <div class="py-3 text-xs space-y-1 border-b-2 border-dashed border-slate-300">
+                            <div><span class="font-bold uppercase">CLIENTE:</span> <span id="viewClienteNome" class="font-medium">---</span></div>
+                            <div id="viewClienteTelWrapper"><span class="font-bold uppercase">TEL/WHATS:</span> <span id="viewClienteTel">---</span></div>
+                            <div id="viewClienteDocWrapper"><span class="font-bold uppercase">CPF/CNPJ:</span> <span id="viewClienteDoc">---</span></div>
+                            <div id="viewClienteEndWrapper"><span class="font-bold uppercase">ENDEREÇO:</span> <span id="viewClienteEnd">---</span></div>
+                        </div>
+
+                        <!-- Tabela de Peças -->
+                        <div class="py-4">
+                            <div id="viewHeaderTabela" class="text-xs font-bold uppercase mb-2 text-slate-700">
+                                RELAÇÃO DE PEÇAS
+                            </div>
+                            
+                            <!-- Cabeçalho Tabela Cupom -->
+                            <div class="grid grid-cols-12 text-[10px] font-bold border-b border-slate-300 pb-1 mb-2 text-slate-600">
+                                <span class="col-span-3">DATA</span>
+                                <span class="col-span-5">DESCRIÇÃO</span>
+                                <span class="col-span-1 text-center">QTD</span>
+                                <span class="col-span-3 text-right">VALOR</span>
+                            </div>
+
+                            <!-- Lista de Itens Renderizada -->
+                            <div id="viewListaItens" class="space-y-2 text-xs">
+                                <!-- Renderizado via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Detalhamento de Totais -->
+                        <div class="border-t-2 border-dashed border-slate-300 pt-3 space-y-1 text-xs">
+                            <div id="viewSubtotalRow" class="flex justify-between text-slate-600">
+                                <span>Subtotal:</span>
+                                <span id="viewSubtotal">R$ 0,00</span>
+                            </div>
+                            <div id="viewDescontoRow" class="flex justify-between text-emerald-600 font-medium hidden">
+                                <span>Desconto:</span>
+                                <span id="viewDesconto">- R$ 0,00</span>
+                            </div>
+                            <div id="viewAcrescimoRow" class="flex justify-between text-red-600 font-medium hidden">
+                                <span>Acréscimo/Juros:</span>
+                                <span id="viewAcrescimo">+ R$ 0,00</span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm font-bold text-slate-900 pt-2 border-t border-slate-200">
+                                <span id="lblTotalFinalView" class="uppercase tracking-wider">TOTAL EM ABERTO:</span>
+                                <span id="viewValorTotal" class="text-base text-red-600 font-bold">R$ 0,00</span>
+                            </div>
+                        </div>
+
+                        <!-- Área Fixo PIX DL Auto Peças -->
+                        <div class="my-4 bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs space-y-1.5">
+                            <div class="flex items-center justify-between font-bold text-slate-800">
+                                <span class="flex items-center gap-1">
+                                    <i class="fas fa-qrcode text-emerald-600"></i> PAGAMENTO PIX
+                                </span>
+                            </div>
+                            <div class="text-[11px] text-slate-600 space-y-0.5">
+                                <div><span class="font-semibold">CHAVE CNPJ:</span> <span class="font-mono font-bold bg-slate-200 px-1 rounded">18.615.637/0001-58</span></div>
+                                <div><span class="font-semibold">TITULAR:</span> <span>DANIELLE APARECIDA BATISTA LOURENÇO</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Mensagem de Rodapé -->
+                        <div class="text-center pt-2 text-[11px] text-slate-600 space-y-2">
+                            <p id="viewMensagem" class="italic"></p>
+                            <div class="text-[10px] text-slate-400 uppercase pt-2">
+                                *** DL AUTO PEÇAS - AGRADECE A PREFERÊNCIA ***
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Base denteada -->
+                    <div class="receipt-edge-bottom h-4 no-print"></div>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- MODAL DE CLIENTES CADASTRADOS NO FIREBASE -->
+    <div id="modalClientes" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden">
+            <!-- Modal Header -->
+            <div class="p-5 bg-slate-900 text-white flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-cloud text-amber-400 text-lg"></i>
+                    <h3 class="font-bold text-lg">Clientes Sincronizados no Firebase</h3>
+                </div>
+                <button onclick="fecharModalClientes()" class="text-slate-400 hover:text-white text-xl p-1">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Modal Search & Content -->
+            <div class="p-4 bg-slate-50 border-b border-slate-200">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3.5 top-3 text-slate-400"></i>
+                    <input type="text" id="inputBuscaModalCliente" oninput="filtrarModalClientes(this.value)" placeholder="Buscar cliente por nome, telefone ou CPF..." class="w-full pl-10 pr-4 py-2 text-sm rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 outline-none">
+                </div>
+            </div>
+
+            <!-- Modal Table -->
+            <div class="p-4 overflow-y-auto flex-1">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-100 text-slate-600 text-xs font-semibold uppercase tracking-wider sticky top-0">
+                        <tr>
+                            <th class="p-3">Nome do Cliente</th>
+                            <th class="p-3">Telefone/WhatsApp</th>
+                            <th class="p-3">CPF/CNPJ</th>
+                            <th class="p-3 text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaModalClientesCorpo" class="divide-y divide-slate-200">
+                        <!-- Preenchido via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 bg-slate-100 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
+                <span><i class="fas fa-check-circle text-emerald-600"></i> Conectado em nuvem: <strong>dlcobrancas-e4477</strong></span>
+                <button onclick="fecharModalClientes()" class="px-4 py-2 bg-slate-800 text-white font-semibold rounded-lg hover:bg-slate-900 transition">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIREBASE SDK V11 (Realtime Database & App) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getDatabase, ref, set, push, onValue, remove, child } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        // Configuração exata fornecida pelo usuário
+        const firebaseConfig = {
+            apiKey: "AIzaSyDzqK6rsEJFTTVugE7ICC4nLCUp20pSudk",
+            authDomain: "dlcobrancas-e4477.firebaseapp.com",
+            databaseURL: "https://dlcobrancas-e4477-default-rtdb.firebaseio.com",
+            projectId: "dlcobrancas-e4477",
+            storageBucket: "dlcobrancas-e4477.firebasestorage.app",
+            messagingSenderId: "745360410808",
+            appId: "1:745360410808:web:bcb80a6ae466efa0260c4d"
+        };
+
+        // Inicializa o Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const clientesRef = ref(db, 'clientes');
+
+        // Disponibiliza as funções do Firebase para o escopo window para uso nos handlers legados
+        window.dbFirebase = db;
+        window.refFirebase = ref;
+        window.setFirebase = set;
+        window.pushFirebase = push;
+        window.removeFirebase = remove;
+
+        // Escutador em tempo real de clientes do Realtime Database
+        onValue(clientesRef, (snapshot) => {
+            const data = snapshot.val();
+            let lista = [];
+            if (data) {
+                lista = Object.keys(data).map(key => ({
+                    id: key,
+                    ...data[key]
+                }));
+            }
+            
+            // Atualiza o estado global de clientes
+            window.baseClientes = lista;
+            
+            // Atualiza a badge de status do Firebase
+            const badgeStatus = document.getElementById('firebaseStatusBadge');
+            if (badgeStatus) {
+                badgeStatus.innerHTML = `<i class="fas fa-check-circle text-emerald-400"></i> Firebase Conectado (${lista.length} clientes)`;
+                badgeStatus.className = "text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-700/60 font-medium px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-sm";
             }
 
-            statusDiv.innerHTML = "🟢 Sincronizado com o Dropbox!";
-            statusDiv.style.backgroundColor = "#d4edda";
-            statusDiv.style.color = "#155724";
-
-            renderizarTabela(dados);
-
-        } catch (erro) {
-            console.error(erro);
-            statusDiv.innerHTML = "🔴 Erro: " + erro.message;
-            statusDiv.style.backgroundColor = "#f8d7da";
-            statusDiv.style.color = "#721c24";
-        }
-    }
-
-    function renderizarTabela(dados) {
-        const tabela = document.getElementById('tabela-corpo');
-        tabela.innerHTML = "";
-
-        dados.forEach(cliente => {
-            // Mapeamento inteligente de propriedades
-            const nome = cliente.nome || cliente.cliente || cliente.Nome || cliente.Cliente || "Sem Nome";
-            const valor = cliente.valor || cliente.valorDevido || cliente.Valor || "0,00";
-            const vencimento = cliente.vencimento || cliente.data || cliente.Vencimento || "-";
-            const diasAtraso = cliente.diasAtraso !== undefined ? cliente.diasAtraso : (cliente.DiasAtraso || 0);
-            const contato = cliente.contato || cliente.telefone || cliente.Celular || cliente.Telefone || "";
-
-            const statusClass = diasAtraso > 0 ? 'atrasado' : 'pendente';
-            const statusTexto = diasAtraso > 0 ? `Atrasado (${diasAtraso} dias)` : 'A vencer';
-            
-            const mensagemWhats = encodeURIComponent(`Olá ${nome}, identificamos uma pendência no valor de R$ ${valor} vencida em ${vencimento}. Como podemos ajudar no acerto?`);
-
-            tabela.innerHTML += `
-                <tr>
-                    <td><strong>${nome}</strong></td>
-                    <td>R$ ${valor}</td>
-                    <td>${vencimento}</td>
-                    <td><span class="status-badge ${statusClass}">${statusTexto}</span></td>
-                    <td>
-                        <a href="https://wa.me/55${contato.replace(/\D/g, '')}?text=${mensagemWhats}" target="_blank" class="btn-whats">
-                            💬 Cobrar
-                        </a>
-                    </td>
-                </tr>
-            `;
+            // Atualiza a interface
+            if (typeof window.atualizarDropdownClientes === 'function') {
+                window.atualizarDropdownClientes();
+            }
+            if (typeof window.atualizarBadgeContadorClientes === 'function') {
+                window.atualizarBadgeContadorClientes();
+            }
+            if (typeof window.renderizarModalClientes === 'function') {
+                const modalInput = document.getElementById('inputBuscaModalCliente');
+                const busca = modalInput ? modalInput.value : '';
+                if (busca) {
+                    window.filtrarModalClientes(busca);
+                } else {
+                    window.renderizarModalClientes(window.baseClientes);
+                }
+            }
+        }, (error) => {
+            console.error("Erro ao conectar no Firebase Realtime Database:", error);
+            const badgeStatus = document.getElementById('firebaseStatusBadge');
+            if (badgeStatus) {
+                badgeStatus.innerHTML = `<i class="fas fa-exclamation-triangle text-amber-400"></i> Modo Offline`;
+                badgeStatus.className = "text-[10px] bg-amber-950 text-amber-300 border border-amber-700/60 font-medium px-2 py-0.5 rounded-full flex items-center gap-1";
+            }
         });
-    }
+    </script>
 
-    function filtrarTabela() {
-        let input = document.getElementById('busca').value.toLowerCase();
-        let linhas = document.getElementById('tabela-corpo').getElementsByTagName('tr');
+    <script>
+        // Dados Fixos da Loja DL AUTO PEÇAS
+        const DADOS_LOJA = {
+            nome: "DL AUTO PEÇAS",
+            cnpj: "18.615.637/0001-58",
+            endereco: "RUA HERACLIO MENDES DE CAMARGO, 3300 - CEP: 84168-260",
+            pixChave: "18.615.637/0001-58",
+            pixTitular: "DANIELLE APARECIDA BATISTA LOURENÇO"
+        };
 
-        for (let i = 0; i < linhas.length; i++) {
-            let textoLinha = lines[i].innerText.toLowerCase();
-            linhas[i].style.display = textoLinha.includes(input) ? "" : "none";
+        // Estado Global do Aplicativo
+        let modoDocumento = 'CREDIARIO'; // 'CREDIARIO' ou 'COMPROVANTE'
+        let listaItens = [];
+        window.baseClientes = []; // Atualizado pelo Firebase Realtime Database
+        let clienteAtualId = null;
+        let timeoutAutoSaveCliente = null;
+
+        // Inicialização do documento
+        window.onload = function() {
+            definirDataHoje();
+            renderizarItens();
+            atualizarCupom();
+        };
+
+        // -------------------------------------------------------------
+        // GESTÃO E SINCRONIZAÇÃO EM NUVEM DE CLIENTES (FIREBASE REALTIME DB)
+        // -------------------------------------------------------------
+        function atualizarBadgeContadorClientes() {
+            const badge = document.getElementById('countClientesBadge');
+            if (badge) badge.textContent = window.baseClientes.length;
         }
-    }
 
-    // Executa assim que a página e o arquivo do Dropbox terminarem de carregar
-    window.onload = inicializarPainel;
-</script>
+        function atualizarDropdownClientes() {
+            const select = document.getElementById('selectClienteSalvo');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">-- Selecione um cliente cadastrado ou digite abaixo --</option>';
 
+            // Ordena por nome
+            const clientesOrdenados = [...window.baseClientes].sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+
+            clientesOrdenados.forEach(cli => {
+                const opt = document.createElement('option');
+                opt.value = cli.id;
+                opt.textContent = `${cli.nome} ${cli.telefone ? ' (' + cli.telefone + ')' : ''}`;
+                if (clienteAtualId === cli.id) {
+                    opt.selected = true;
+                }
+                select.appendChild(opt);
+            });
+        }
+
+        // Auto-Save do cliente em tempo real no Firebase
+        function aoDigitarCliente() {
+            atualizarCupom();
+
+            clearTimeout(timeoutAutoSaveCliente);
+            timeoutAutoSaveCliente = setTimeout(() => {
+                salvarClienteAtualFirebase();
+            }, 800);
+        }
+
+        function salvarClienteAtualFirebase() {
+            const nome = document.getElementById('clienteNome').value.trim();
+            const telefone = document.getElementById('clienteTelefone').value.trim();
+            const documento = document.getElementById('clienteDocumento').value.trim();
+            const endereco = document.getElementById('clienteEndereco').value.trim();
+
+            if (!nome || nome.length < 2) return;
+
+            // Dados sanitizados
+            const dadosCliente = {
+                nome: nome,
+                telefone: telefone || '',
+                documento: documento || '',
+                endereco: endereco || '',
+                atualizadoEm: new Date().toISOString()
+            };
+
+            if (window.dbFirebase && window.refFirebase && window.setFirebase) {
+                if (!clienteAtualId) {
+                    // Verifica se já existe um cliente cadastrado com o mesmo nome
+                    const clienteExistente = window.baseClientes.find(c => (c.nome || '').toLowerCase() === nome.toLowerCase());
+                    if (clienteExistente) {
+                        clienteAtualId = clienteExistente.id;
+                        const clientRef = window.refFirebase(window.dbFirebase, 'clientes/' + clienteAtualId);
+                        window.setFirebase(clientRef, dadosCliente);
+                    } else {
+                        // Cria um novo nó no Firebase usando o push
+                        const newRef = window.pushFirebase(window.refFirebase(window.dbFirebase, 'clientes'));
+                        clienteAtualId = newRef.key;
+                        window.setFirebase(newRef, dadosCliente);
+                    }
+                } else {
+                    // Atualiza o nó existente
+                    const clientRef = window.refFirebase(window.dbFirebase, 'clientes/' + clienteAtualId);
+                    window.setFirebase(clientRef, dadosCliente);
+                }
+            }
+        }
+
+        function selecionarClienteCadastrado(id) {
+            if (!id) {
+                clienteAtualId = null;
+                return;
+            }
+
+            const cli = window.baseClientes.find(c => c.id === id);
+            if (cli) {
+                clienteAtualId = cli.id;
+                document.getElementById('clienteNome').value = cli.nome || '';
+                document.getElementById('clienteTelefone').value = cli.telefone || '';
+                document.getElementById('clienteDocumento').value = cli.documento || '';
+                document.getElementById('clienteEndereco').value = cli.endereco || '';
+
+                atualizarCupom();
+                exibirToast(`Cliente ${cli.nome} carregado do Firebase!`);
+            }
+        }
+
+        function abrirModalClientes() {
+            renderizarModalClientes(window.baseClientes);
+            document.getElementById('modalClientes').classList.remove('hidden');
+        }
+
+        function fecharModalClientes() {
+            document.getElementById('modalClientes').classList.add('hidden');
+        }
+
+        function filtrarModalClientes(termo) {
+            termo = (termo || '').toLowerCase().trim();
+            if (!termo) {
+                renderizarModalClientes(window.baseClientes);
+                return;
+            }
+            const filtrados = window.baseClientes.filter(c => 
+                (c.nome && c.nome.toLowerCase().includes(termo)) ||
+                (c.telefone && c.telefone.includes(termo)) ||
+                (c.documento && c.documento.includes(termo))
+            );
+            renderizarModalClientes(filtrados);
+        }
+
+        function renderizarModalClientes(lista) {
+            const tbody = document.getElementById('tabelaModalClientesCorpo');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (!lista || lista.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">Nenhum cliente cadastrado no Firebase.</td></tr>`;
+                return;
+            }
+
+            lista.forEach(cli => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition';
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-slate-800">${cli.nome || '---'}</td>
+                    <td class="p-3 text-slate-600">${cli.telefone || '---'}</td>
+                    <td class="p-3 text-slate-600 font-mono text-xs">${cli.documento || '---'}</td>
+                    <td class="p-3 text-center space-x-1">
+                        <button onclick="carregarEFecharModal('${cli.id}')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-2.5 py-1 rounded text-xs transition" title="Selecionar para o Extrato">
+                            <i class="fas fa-check"></i> Selecionar
+                        </button>
+                        <button onclick="excluirClienteFirebase('${cli.id}')" class="bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded text-xs transition" title="Excluir do Firebase">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function carregarEFecharModal(id) {
+            selecionarClienteCadastrado(id);
+            fecharModalClientes();
+        }
+
+        function excluirClienteFirebase(id) {
+            if (confirm('Deseja realmente remover este cliente do banco de dados do Firebase?')) {
+                if (window.dbFirebase && window.refFirebase && window.removeFirebase) {
+                    const clientRef = window.refFirebase(window.dbFirebase, 'clientes/' + id);
+                    window.removeFirebase(clientRef).then(() => {
+                        if (clienteAtualId === id) clienteAtualId = null;
+                        exibirToast('Cliente excluído do Firebase.', 'alerta');
+                    }).catch((err) => {
+                        console.error('Erro ao excluir cliente:', err);
+                        exibirToast('Erro ao excluir cliente do Firebase.', 'erro');
+                    });
+                }
+            }
+        }
+
+        // -------------------------------------------------------------
+        // CONTROLE DO CUPOM E MODO DE DOCUMENTO
+        // -------------------------------------------------------------
+        function setModoDocumento(modo) {
+            modoDocumento = modo;
+            
+            const btnCred = document.getElementById('btnModoCrediario');
+            const btnComp = document.getElementById('btnModoComprovante');
+            const badge = document.getElementById('badgeModoAtual');
+            const lblWhats = document.getElementById('lblBtnWhats');
+
+            if (modo === 'COMPROVANTE') {
+                btnComp.className = 'px-3 py-1.5 rounded-lg transition bg-emerald-600 text-white shadow font-bold';
+                btnCred.className = 'px-3 py-1.5 rounded-lg transition text-slate-600 hover:text-slate-900';
+                badge.textContent = 'COMPROVANTE PAGO';
+                badge.className = 'text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full';
+                lblWhats.textContent = 'Enviar Comprovante Pago (WhatsApp)';
+            } else {
+                btnCred.className = 'px-3 py-1.5 rounded-lg transition bg-amber-500 text-slate-900 shadow font-bold';
+                btnComp.className = 'px-3 py-1.5 rounded-lg transition text-slate-600 hover:text-slate-900';
+                badge.textContent = 'CREDIARIO';
+                badge.className = 'text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full';
+                lblWhats.textContent = 'Enviar Extrato no WhatsApp';
+            }
+
+            atualizarCupom();
+        }
+
+        function definirDataHoje() {
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('inputItemData').value = hoje;
+            document.getElementById('dataEmissao').value = hoje;
+            document.getElementById('dataVencimento').value = hoje;
+        }
+
+        function formatarMoeda(valor) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor || 0);
+        }
+
+        function formatarDataBR(dataIso) {
+            if (!dataIso) return '';
+            const partes = dataIso.split('-');
+            if (partes.length !== 3) return dataIso;
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+
+        // Adicionar peça
+        function adicionarItem(event) {
+            event.preventDefault();
+            const data = document.getElementById('inputItemData').value;
+            const desc = document.getElementById('inputItemDesc').value.trim();
+            const qtd = parseInt(document.getElementById('inputItemQtd').value) || 1;
+            const valorUnit = parseFloat(document.getElementById('inputItemValor').value);
+
+            if (!desc || isNaN(valorUnit) || valorUnit <= 0 || qtd <= 0) {
+                exibirToast('Informe a descrição, quantidade e valor válidos.', 'erro');
+                return;
+            }
+
+            const novoItem = {
+                id: Date.now(),
+                data: data,
+                descricao: desc,
+                qtd: qtd,
+                valorUnit: valorUnit,
+                valorTotal: qtd * valorUnit,
+                pago: modoDocumento === 'COMPROVANTE'
+            };
+
+            listaItens.push(novoItem);
+            document.getElementById('inputItemDesc').value = '';
+            document.getElementById('inputItemQtd').value = '1';
+            document.getElementById('inputItemValor').value = '';
+            document.getElementById('inputItemDesc').focus();
+            
+            renderizarItens();
+            atualizarCupom();
+            exibirToast('Peça adicionada ao extrato!');
+        }
+
+        function alternarStatusPago(id) {
+            const item = listaItens.find(i => i.id === id);
+            if (item) {
+                item.pago = !item.pago;
+                renderizarItens();
+                atualizarCupom();
+                exibirToast(item.pago ? 'Item marcado como PAGO' : 'Item marcado em ABERTO');
+            }
+        }
+
+        function marcarTodosItens(statusPago) {
+            listaItens.forEach(i => i.pago = statusPago);
+            renderizarItens();
+            atualizarCupom();
+            exibirToast(statusPago ? 'Todos os itens quitados!' : 'Todos os itens em aberto.');
+        }
+
+        function removerItem(id) {
+            listaItens = listaItens.filter(item => item.id !== id);
+            renderizarItens();
+            atualizarCupom();
+            exibirToast('Peça removida.', 'alerta');
+        }
+
+        function renderizarItens() {
+            const tbody = document.getElementById('tabelaItensCorpo');
+            tbody.innerHTML = '';
+
+            if (listaItens.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="p-4 text-center text-slate-400 italic">
+                            Nenhuma peça cadastrada. Adicione no formulário acima.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            listaItens.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = item.pago ? 'bg-emerald-50/50 hover:bg-emerald-50 transition' : 'hover:bg-slate-50 transition';
+
+                tr.innerHTML = `
+                    <td class="p-3 text-center">
+                        <button type="button" onclick="alternarStatusPago(${item.id})" class="px-2 py-1 rounded text-xs font-bold transition ${item.pago ? 'bg-emerald-600 text-white' : 'bg-amber-100 text-amber-800 hover:bg-amber-200'}">
+                            ${item.pago ? '<i class="fas fa-check-circle"></i> PAGO' : '<i class="fas fa-clock"></i> ABERTO'}
+                        </button>
+                    </td>
+                    <td class="p-3 text-slate-600 font-mono text-xs">${formatarDataBR(item.data)}</td>
+                    <td class="p-3 font-medium text-slate-800 ${item.pago ? 'line-through text-slate-500' : ''}">${item.descricao}</td>
+                    <td class="p-3 text-center text-slate-700 font-semibold">${item.qtd}</td>
+                    <td class="p-3 text-right font-bold text-slate-900">${formatarMoeda(item.valorTotal)}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="removerItem(${item.id})" title="Remover" class="text-red-500 hover:text-red-700 p-1 rounded transition">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // CÁLCULOS DE TOTAIS
+        function calcularSubtotalGeral() {
+            return listaItens.reduce((acc, item) => acc + item.valorTotal, 0);
+        }
+
+        function calcularSubtotalPagos() {
+            return listaItens.filter(i => i.pago).reduce((acc, item) => acc + item.valorTotal, 0);
+        }
+
+        function calcularTotalFinalGeral() {
+            const subtotal = calcularSubtotalGeral();
+            const desconto = parseFloat(document.getElementById('valorDesconto').value) || 0;
+            const acrescimo = parseFloat(document.getElementById('valorAcrescimo').value) || 0;
+            return Math.max(0, subtotal - desconto + acrescimo);
+        }
+
+        function calcularTotalFinalPagos() {
+            const subtotalGeral = calcularSubtotalGeral();
+            const subtotalPagos = calcularSubtotalPagos();
+            if (subtotalGeral === 0) return 0;
+            
+            const proporcao = subtotalPagos / subtotalGeral;
+            const desconto = parseFloat(document.getElementById('valorDesconto').value) || 0;
+            const acrescimo = parseFloat(document.getElementById('valorAcrescimo').value) || 0;
+            
+            return Math.max(0, subtotalPagos - (desconto * proporcao) + (acrescimo * proporcao));
+        }
+
+        function atualizarCupom() {
+            // Cliente e Datas
+            const cliNome = document.getElementById('clienteNome').value || '---------------------';
+            const cliTel = document.getElementById('clienteTelefone').value;
+            const cliDoc = document.getElementById('clienteDocumento').value;
+            const cliEnd = document.getElementById('clienteEndereco').value;
+            const dtEmissao = document.getElementById('dataEmissao').value;
+            const dtVenc = document.getElementById('dataVencimento').value;
+
+            document.getElementById('viewClienteNome').textContent = cliNome;
+            
+            const telWrapper = document.getElementById('viewClienteTelWrapper');
+            if (cliTel) {
+                document.getElementById('viewClienteTel').textContent = cliTel;
+                telWrapper.style.display = 'block';
+            } else {
+                telWrapper.style.display = 'none';
+            }
+
+            const docWrapper = document.getElementById('viewClienteDocWrapper');
+            if (cliDoc) {
+                document.getElementById('viewClienteDoc').textContent = cliDoc;
+                docWrapper.style.display = 'block';
+            } else {
+                docWrapper.style.display = 'none';
+            }
+
+            const endWrapper = document.getElementById('viewClienteEndWrapper');
+            if (cliEnd) {
+                document.getElementById('viewClienteEnd').textContent = cliEnd;
+                endWrapper.style.display = 'block';
+            } else {
+                endWrapper.style.display = 'none';
+            }
+
+            document.getElementById('viewDataEmissao').textContent = dtEmissao ? `Emissão: ${formatarDataBR(dtEmissao)}` : 'Emissão: --/--/----';
+            document.getElementById('viewDataVencimento').textContent = dtVenc ? (modoDocumento === 'COMPROVANTE' ? `Pago em: ${formatarDataBR(dtVenc)}` : `Venc: ${formatarDataBR(dtVenc)}`) : '';
+
+            // Mensagem
+            document.getElementById('viewMensagem').textContent = document.getElementById('mensagemAgradecimento').value;
+
+            // Ajuste do Título e Marca d'água de acordo com o modo
+            const watermark = document.getElementById('watermarkStatus');
+            const tituloDoc = document.getElementById('viewTituloDoc');
+            const headerTabela = document.getElementById('viewHeaderTabela');
+            const lblTotalFinal = document.getElementById('lblTotalFinalView');
+            const valTotalView = document.getElementById('viewValorTotal');
+
+            if (modoDocumento === 'COMPROVANTE') {
+                watermark.textContent = 'RECEBIDO / QUITADO';
+                watermark.className = 'absolute top-12 right-6 border-2 border-emerald-600 text-emerald-600 font-bold px-3 py-1 rounded text-xs uppercase tracking-widest rotate-12 select-none pointer-events-none bg-emerald-50/80';
+                tituloDoc.textContent = 'COMPROVANTE DE PAGAMENTO';
+                headerTabela.textContent = 'PEÇAS QUITADAS / RECEBIDAS';
+                lblTotalFinal.textContent = 'TOTAL PAGO / RECEBIDO:';
+                valTotalView.className = 'text-base text-emerald-600 font-bold';
+            } else {
+                watermark.textContent = 'CREDIÁRIO EM ABERTO';
+                watermark.className = 'absolute top-12 right-6 border-2 border-red-500/30 text-red-500/40 font-bold px-3 py-1 rounded text-xs uppercase tracking-widest rotate-12 select-none pointer-events-none';
+                tituloDoc.textContent = 'EXTRATO DE CREDIÁRIO';
+                headerTabela.textContent = 'RELAÇÃO DE PEÇAS / DÉBITOS';
+                lblTotalFinal.textContent = 'TOTAL EM ABERTO:';
+                valTotalView.className = 'text-base text-red-600 font-bold';
+            }
+
+            // Renderizar itens no cupom
+            const containerViewItens = document.getElementById('viewListaItens');
+            containerViewItens.innerHTML = '';
+
+            const itensExibir = modoDocumento === 'COMPROVANTE' ? listaItens.filter(i => i.pago) : listaItens;
+
+            if (itensExibir.length === 0) {
+                containerViewItens.innerHTML = `<div class="text-center py-4 text-slate-400 italic">${modoDocumento === 'COMPROVANTE' ? 'Nenhuma peça quitada selecionada.' : 'Nenhuma peça pendente.'}</div>`;
+            } else {
+                itensExibir.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'grid grid-cols-12 gap-1 py-1 border-b border-slate-100 items-start';
+                    row.innerHTML = `
+                        <span class="col-span-3 text-[10px] text-slate-500">${formatarDataBR(item.data)}</span>
+                        <span class="col-span-5 font-medium text-slate-800 break-words">${item.descricao} ${modoDocumento === 'CREDIARIO' && item.pago ? '<span class="text-[9px] text-emerald-600 font-bold">(PAGO)</span>' : ''}</span>
+                        <span class="col-span-1 text-center font-bold text-slate-600">${item.qtd}</span>
+                        <span class="col-span-3 text-right font-bold text-slate-900">${formatarMoeda(item.valorTotal)}</span>
+                    `;
+                    containerViewItens.appendChild(row);
+                });
+            }
+
+            // Totais Exibidos
+            const subtotal = modoDocumento === 'COMPROVANTE' ? calcularSubtotalPagos() : calcularSubtotalGeral();
+            const totalFinal = modoDocumento === 'COMPROVANTE' ? calcularTotalFinalPagos() : calcularTotalFinalGeral();
+            const desconto = parseFloat(document.getElementById('valorDesconto').value) || 0;
+            const acrescimo = parseFloat(document.getElementById('valorAcrescimo').value) || 0;
+
+            document.getElementById('formValorTotal').textContent = formatarMoeda(calcularTotalFinalGeral());
+            document.getElementById('formValorPagoTotal').textContent = formatarMoeda(calcularTotalFinalPagos());
+
+            document.getElementById('viewSubtotal').textContent = formatarMoeda(subtotal);
+            valTotalView.textContent = formatarMoeda(totalFinal);
+
+            // Desconto / Acréscimo
+            const descRow = document.getElementById('viewDescontoRow');
+            if (desconto > 0) {
+                document.getElementById('viewDesconto').textContent = `- ${formatarMoeda(desconto)}`;
+                descRow.classList.remove('hidden');
+            } else {
+                descRow.classList.add('hidden');
+            }
+
+            const acrRow = document.getElementById('viewAcrescimoRow');
+            if (acrescimo > 0) {
+                document.getElementById('viewAcrescimo').textContent = `+ ${formatarMoeda(acrescimo)}`;
+                acrRow.classList.remove('hidden');
+            } else {
+                acrRow.classList.add('hidden');
+            }
+        }
+
+        // AÇÃO AUTOMÁTICA: Copiar PIX e Gerar Comprovante
+        function copiarChavePixEQuitar() {
+            marcarTodosItens(true);
+            setModoDocumento('COMPROVANTE');
+            copiarParaClipboard(DADOS_LOJA.pixChave, 'Chave PIX copiada e Comprovante de Pagamento gerado!');
+        }
+
+        function gerarTextoWhatsApp() {
+            const cliNome = document.getElementById('clienteNome').value || 'Cliente';
+            const dtEmissao = document.getElementById('dataEmissao').value;
+            const dtVenc = document.getElementById('dataVencimento').value;
+            const msgFinal = document.getElementById('mensagemAgradecimento').value;
+
+            const agora = new Date();
+            const horaAtual = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+            let texto = `⚙️ *${DADOS_LOJA.nome}*\n`;
+            texto += `CNPJ: ${DADOS_LOJA.cnpj}\n`;
+            texto += `${DADOS_LOJA.endereco}\n`;
+            texto += `----------------------------------------\n`;
+
+            if (modoDocumento === 'COMPROVANTE') {
+                const totalPago = calcularTotalFinalPagos();
+                const itensPagos = listaItens.filter(i => i.pago);
+
+                texto += `✅ *RECEBIDO / COMPROVANTE DE PAGAMENTO*\n`;
+                texto += `👤 *Cliente:* ${cliNome}\n`;
+                if (dtVenc) texto += `📅 *Data Pagamento:* ${formatarDataBR(dtVenc)} às ${horaAtual}\n`;
+                texto += `----------------------------------------\n\n`;
+                texto += `🔧 *PEÇAS QUITADAS / RECEBIDAS:*\n\n`;
+
+                if (itensPagos.length === 0) {
+                    texto += `_Todas as peças do extrato_\n\n`;
+                } else {
+                    itensPagos.forEach((item) => {
+                        texto += `✔️ *${item.descricao}*\n`;
+                        texto += `   🗓️ ${formatarDataBR(item.data)} | Qtd: ${item.qtd}x | Total: *${formatarMoeda(item.valorTotal)}*\n\n`;
+                    });
+                }
+
+                texto += `----------------------------------------\n`;
+                texto += `💰 *VALOR TOTAL RECEBIDO: ${formatarMoeda(totalPago)}*\n`;
+                texto += `STATUS: *PAGO / QUITADO VIA PIX* ✅\n`;
+                texto += `----------------------------------------\n\n`;
+                texto += `Confirmamos o recebimento do valor acima no PIX em nome de *${DADOS_LOJA.pixTitular}*.\n\n`;
+
+            } else {
+                const totalAberto = calcularTotalFinalGeral();
+
+                texto += `📄 *EXTRATO DE CREDIÁRIO / PEÇAS*\n`;
+                texto += `👤 *Cliente:* ${cliNome}\n`;
+                if (dtEmissao) texto += `📅 *Emissão:* ${formatarDataBR(dtEmissao)}\n`;
+                if (dtVenc) texto += `⏳ *Vencimento:* ${formatarDataBR(dtVenc)}\n`;
+                texto += `----------------------------------------\n\n`;
+                texto += `🔧 *RELAÇÃO DE PEÇAS / DÉBITOS:*\n\n`;
+
+                if (listaItens.length === 0) {
+                    texto += `_Nenhuma peça cadastrada._\n\n`;
+                } else {
+                    listaItens.forEach((item, i) => {
+                        texto += `${i + 1}. *${item.descricao}* ${item.pago ? '✅ _(PAGO)_' : ''}\n`;
+                        texto += `   🗓️ ${formatarDataBR(item.data)} | Qtd: ${item.qtd}x | Total: *${formatarMoeda(item.valorTotal)}*\n\n`;
+                    });
+                }
+
+                texto += `----------------------------------------\n`;
+                texto += `💰 *TOTAL EM ABERTO: ${formatarMoeda(totalAberto)}*\n`;
+                texto += `----------------------------------------\n\n`;
+
+                texto += `🔑 *CHAVE PIX PARA PAGAMENTO (CNPJ):*\n`;
+                texto += `👉 \`${DADOS_LOJA.pixChave}\`\n`;
+                texto += `👤 *Titular:* ${DADOS_LOJA.pixTitular}\n\n`;
+            }
+
+            if (msgFinal) {
+                texto += `💬 _${msgFinal}_\n\n`;
+            }
+
+            texto += `Atenciosamente, *${DADOS_LOJA.nome}* 🙏`;
+
+            return texto;
+        }
+
+        function enviarWhatsApp() {
+            const telefoneInput = document.getElementById('clienteTelefone').value;
+            const numLimpo = telefoneInput.replace(/\D/g, '');
+            const textoMsg = encodeURIComponent(gerarTextoWhatsApp());
+            
+            let url = '';
+            if (numLimpo.length >= 10) {
+                const ddi = numLimpo.startsWith('55') ? numLimpo : '55' + numLimpo;
+                url = `https://api.whatsapp.com/send?phone=${ddi}&text=${textoMsg}`;
+            } else {
+                url = `https://api.whatsapp.com/send?text=${textoMsg}`;
+            }
+
+            window.open(url, '_blank');
+        }
+
+        function copiarTextoWhatsApp() {
+            const texto = gerarTextoWhatsApp();
+            copiarParaClipboard(texto, 'Texto formatado para o WhatsApp copiado!');
+        }
+
+        function copiarParaClipboard(texto, msgSucesso) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(texto).then(() => {
+                    exibirToast(msgSucesso);
+                }).catch(() => {
+                    fallbackCopiar(texto, msgSucesso);
+                });
+            } else {
+                fallbackCopiar(texto, msgSucesso);
+            }
+        }
+
+        function fallbackCopiar(texto, msgSucesso) {
+            const ta = document.createElement("textarea");
+            ta.value = texto;
+            ta.style.position = "fixed";
+            ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            try {
+                document.execCommand('copy');
+                exibirToast(msgSucesso);
+            } catch (err) {
+                exibirToast('Não foi possível copiar.', 'erro');
+            }
+            document.body.removeChild(ta);
+        }
+
+        function imprimirCupom() {
+            window.print();
+        }
+
+        function novoCrediario() {
+            clienteAtualId = null;
+            const sel = document.getElementById('selectClienteSalvo');
+            if (sel) sel.value = '';
+            
+            document.getElementById('clienteNome').value = '';
+            document.getElementById('clienteTelefone').value = '';
+            document.getElementById('clienteDocumento').value = '';
+            document.getElementById('clienteEndereco').value = '';
+            document.getElementById('dataVencimento').value = '';
+            document.getElementById('valorDesconto').value = '0';
+            document.getElementById('valorAcrescimo').value = '0';
+            document.getElementById('mensagemAgradecimento').value = '';
+            
+            listaItens = [];
+            modoDocumento = 'CREDIARIO';
+            setModoDocumento('CREDIARIO');
+            definirDataHoje();
+            renderizarItens();
+            atualizarCupom();
+            exibirToast('Pronto para um novo cliente e lista de peças!', 'alerta');
+        }
+
+        function exibirToast(mensagem, tipo = 'sucesso') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.textContent = mensagem;
+
+            if (tipo === 'erro') {
+                toastIcon.className = 'fas fa-exclamation-circle text-red-400 text-lg';
+            } else if (tipo === 'alerta') {
+                toastIcon.className = 'fas fa-info-circle text-amber-400 text-lg';
+            } else {
+                toastIcon.className = 'fas fa-check-circle text-emerald-400 text-lg';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
 </body>
 </html>
